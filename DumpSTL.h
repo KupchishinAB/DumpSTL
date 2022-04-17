@@ -31,10 +31,10 @@ namespace STL //header
         float distance(const Point3<T>& pt) const;
         Point3<T> cross_product(const Point3<T>& pt) const;
 
-        Point3<T> & operator+=(const Point3<T>&);
-        Point3<T> & operator-=(const Point3<T>&);
-        Point3<T> & operator/=(T value);
-        Point3<T> & operator*=(T value);
+        Point3<T>& operator+=(const Point3<T>&);
+        Point3<T>& operator-=(const Point3<T>&);
+        Point3<T>& operator/=(T value);
+        Point3<T>& operator*=(T value);
     };
 #pragma pack(pop)
     using Point3f = Point3<float>;
@@ -79,7 +79,7 @@ namespace STL //header
 
 namespace STL //source
 {
-///////////////////////////////////////////////// Point3
+    ///////////////////////////////////////////////// Point3
     template <typename T> constexpr Point3<T>::Point3<T>(T x, T y, T z)
         : _x(x), _y(y), _z(z)
     {
@@ -150,7 +150,7 @@ namespace STL //source
         return *this;
     }
 
-///////////////////////////////////////////////// Triangle
+    ///////////////////////////////////////////////// Triangle
     constexpr Triangle::Triangle(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3)
         : _vertice0(pt1), _vertice1(pt2), _vertice2(pt3)
     {
@@ -183,8 +183,8 @@ namespace STL //source
             return _vertice1;
         return _vertice2;
     }
-     
-///////////////////////////////////////////////// Model3D
+
+    ///////////////////////////////////////////////// Model3D
     void Model3D::exportTxt(const std::string& str) const
     {
         std::ofstream file;
@@ -249,8 +249,8 @@ namespace STL //source
         };
         std::sort(bidders.begin(), bidders.end(), [](const auto& a, const auto& b) {
             return a.first < b.first;
-        });
-        const auto basisX = directionCone.cross_product(bidders[1].second).normalize()* baseSize;
+            });
+        const auto basisX = directionCone.cross_product(bidders[1].second).normalize() * baseSize;
         const auto basisY = basisX.cross_product(directionCone).normalize() * baseSize;
 
         addQuad(pt1 + basisX, pt1 + basisY, pt1 - basisX, pt1 - basisY);
@@ -303,7 +303,7 @@ namespace STL //source
 
         for (const auto& tr : sphere)
         {
-            addTriangle(tr[0]* radius + center, tr[1] * radius + center, tr[2] * radius + center );
+            addTriangle(tr[0] * radius + center, tr[1] * radius + center, tr[2] * radius + center);
         }
     }
 }
@@ -414,7 +414,7 @@ namespace STL
 {
     void generateExamples()
     {
-        save("stlExample_points", std::vector<Point3f>{ {0,0,0}, {1,1,0}, {2,0,0}, {3,1,0}, {4,0,0} });
+        save("stlExample_points", std::vector<Point3f>{ {0, 0, 0}, { 1,1,0 }, { 2,0,0 }, { 3,1,0 }, { 4,0,0 } });
 
         save("stlExample_spheres", sphere({ {0,0,0}, {5,5,5}, {5,0,0}, {0,5,0}, {0,0,5} }));
 
@@ -433,12 +433,12 @@ namespace STL
         save("stlExample_tetraedr", tetraedr);
 
         Model3D cube;
-        cube.addQuad({0,0,0}, {0,0,1}, {1,0,1}, {1,0,0});
-        cube.addQuad({0,1,0}, {0,1,1}, {1,1,1}, {1,1,0});
-        cube.addQuad({0,0,0}, {0,0,1}, {0,1,1}, {0,1,0});
-        cube.addQuad({1,0,0}, {1,1,0}, {1,1,1}, {1,0,1});
-        cube.addQuad({0,1,0}, {0,0,0}, {1,0,0}, {1,1,0});
-        cube.addQuad({0,0,1}, {0,1,1}, {1,1,1}, {1,0,1});
+        cube.addQuad({ 0,0,0 }, { 0,0,1 }, { 1,0,1 }, { 1,0,0 });
+        cube.addQuad({ 0,1,0 }, { 0,1,1 }, { 1,1,1 }, { 1,1,0 });
+        cube.addQuad({ 0,0,0 }, { 0,0,1 }, { 0,1,1 }, { 0,1,0 });
+        cube.addQuad({ 1,0,0 }, { 1,1,0 }, { 1,1,1 }, { 1,0,1 });
+        cube.addQuad({ 0,1,0 }, { 0,0,0 }, { 1,0,0 }, { 1,1,0 });
+        cube.addQuad({ 0,0,1 }, { 0,1,1 }, { 1,1,1 }, { 1,0,1 });
         save("stlExample_cube", cube);
     }
 }
