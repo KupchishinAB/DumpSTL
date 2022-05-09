@@ -10,7 +10,7 @@ namespace STL //settings
     constexpr bool isEnable = true;
     constexpr std::string_view folderSTL = "";
     //constexpr std::string_view folderSTL = "C:\\Repos\\STL\\";
-    constexpr float coneBaseSize = 1.0f / 20.0f; //ratio length and size of base
+    constexpr float coneBaseSize = 1.f / 20.f; //ratio length and size of base
     constexpr float oneSphereRadius = 0.1f; //
     constexpr float ratioSphereRadius = 0.025f;
 }
@@ -25,7 +25,7 @@ namespace STL //header
         T y;
         T z;
 
-        constexpr Point3(T x, T y, T z);
+        constexpr Point3(const T x, const T y, const T z);
         Point3() = default;
 
         Point3<T> normalize() const;
@@ -34,8 +34,8 @@ namespace STL //header
 
         Point3<T>& operator+=(const Point3<T>&);
         Point3<T>& operator-=(const Point3<T>&);
-        Point3<T>& operator/=(T value);
-        Point3<T>& operator*=(T value);
+        Point3<T>& operator/=(const T value);
+        Point3<T>& operator*=(const T value);
     };
 #pragma pack(pop)
     using Point3f = Point3<float>;
@@ -43,7 +43,7 @@ namespace STL //header
 #pragma pack(push, 1)
     struct Triangle
     {
-        Point3f norm = Point3f(0.0f, 0.0f, 1.0f); //for export STL
+        Point3f norm = Point3f(0.f, 0.f, 1.f); //for export STL
         Point3f vertice0;
         Point3f vertice1;
         Point3f vertice2;
@@ -55,8 +55,8 @@ namespace STL //header
         constexpr Triangle(Point3f&& pt1, Point3f&& pt2, Point3f&& pt3);
 
         static float getArea(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3);
-        Point3f& operator[] (int index);
-        const Point3f& operator[] (int index) const;
+        Point3f& operator[] (const int index);
+        const Point3f& operator[] (const int index) const;
     };
 #pragma pack(pop)
 
@@ -75,8 +75,8 @@ namespace STL //header
         void addPoint(const Point3f& pt1);
         void addEdge(const Point3f& pt1, const Point3f& pt2);
         void addQuad(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3, const Point3f& pt4);
-        void addCone(const Point3f& pt1, const Point3f& pt2, float baseSize = coneBaseSize);
-        void addSphere(const Point3f& center, float radius);
+        void addCone(const Point3f& pt1, const Point3f& pt2, const float baseSize = coneBaseSize);
+        void addSphere(const Point3f& center, const float radius);
 
         static constexpr std::string_view extension = ".stl";
     };
@@ -85,7 +85,7 @@ namespace STL //header
 namespace STL //source
 {
     ///////////////////////////////////////////////// Point3
-    template <typename T> constexpr Point3<T>::Point3(T coordX, T coordY, T coordZ)
+    template <typename T> constexpr Point3<T>::Point3(const T coordX, const T coordY, const T coordZ)
         : x(coordX), y(coordY), z(coordZ)
     {
     }
@@ -129,25 +129,25 @@ namespace STL //source
         return Point3<T>(pt1.x + pt2.x, pt1.y + pt2.y, pt1.z + pt2.z);
     }
 
-    template<typename T> Point3<T> operator*(const Point3<T>& pt, T val)
+    template<typename T> Point3<T> operator*(const Point3<T>& pt, const T val)
     {
         return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
     }
-    template<typename T> Point3<T> operator*(T val, const Point3<T>& pt)
+    template<typename T> Point3<T> operator*(const T val, const Point3<T>& pt)
     {
         return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
     }
-    template<typename T> Point3<T>& Point3<T>::operator*=(T val)
+    template<typename T> Point3<T>& Point3<T>::operator*=(const T val)
     {
         x = *val;
         y = *val;
         z = *val;
     }
-    template<typename T> Point3<T> operator/(const Point3<T>& pt, T val)
+    template<typename T> Point3<T> operator/(const Point3<T>& pt, const T val)
     {
         return Point3<T>(pt.x / val, pt.y / val, pt.z / val);
     }
-    template<typename T> Point3<T>& Point3<T>::operator/=(T val)
+    template<typename T> Point3<T>& Point3<T>::operator/=(const T val)
     {
         x /= val;
         y /= val;
@@ -172,7 +172,7 @@ namespace STL //source
         float p = (a + b + c) / 2;
         return sqrt(p * (p - a) * (p - b) * (p - c));
     }
-    Point3f& Triangle::operator[] (int index)
+    Point3f& Triangle::operator[] (const int index)
     {
         if (index == 0)
             return vertice0;
@@ -180,7 +180,7 @@ namespace STL //source
             return vertice1;
         return vertice2;
     }
-    const Point3f& Triangle::operator[] (int index) const
+    const Point3f& Triangle::operator[] (const int index) const
     {
         if (index == 0)
             return vertice0;
@@ -190,7 +190,7 @@ namespace STL //source
     }
 
     ///////////////////////////////////////////////// Model3D
-    static void exportTxt(std::string_view filename, const std::vector<Triangle>& triangles )
+    static void exportTxt(std::string_view filename, const std::vector<Triangle>& triangles)
     {
         std::ofstream file;
         file << "solid \n";
@@ -266,13 +266,13 @@ namespace STL //source
     {
         triangles.emplace_back(Triangle(pt1, pt2, pt2));
     }
-    void Model3D::addCone(const Point3f& pt1, const Point3f& pt2, float baseSize)
+    void Model3D::addCone(const Point3f& pt1, const Point3f& pt2, const float baseSize)
     {
         const auto directionCone = (pt2 - pt1).normalize();
         std::vector<std::pair<float, Point3f>> bidders = {
-            {directionCone.x, Point3f{1.0f, 0.0f, 0.0f} },
-            {directionCone.y, Point3f{0.0f, 1.0f, 0.0f} },
-            {directionCone.z, Point3f{0.0f, 0.0f, 1.0f} },
+            {directionCone.x, Point3f{1.f, 0.f, 0.f} },
+            {directionCone.y, Point3f{0.f, 1.f, 0.f} },
+            {directionCone.z, Point3f{0.f, 0.f, 1.f} },
         };
         std::sort(bidders.begin(), bidders.end(), [](const auto& a, const auto& b) {
             return a.first < b.first;
@@ -300,32 +300,32 @@ namespace STL //source
             triangles.emplace_back(Triangle(pt1, pt3, pt4));
         }
     }
-    void Model3D::addSphere(const Point3f& center, float radius)
+    void Model3D::addSphere(const Point3f& center, const float radius)
     {
         constexpr float phi = 1.61803398875f;
         constexpr Triangle sphere[] = {
-            Triangle(Point3f(0.0f, -phi, 1.0f), Point3f(-phi, -1.0f, 0.0f), Point3f(-1.0f, 0.0f, phi)),
-            Triangle(Point3f(0.0f, -phi, 1.0f), Point3f(-1.0f, 0, phi), Point3f(1.0f, 0.0f, phi)),
-            Triangle(Point3f(0.0f, -phi, 1.0f), Point3f(1.0f, 0.0f, phi), Point3f(phi, -1.0f, 0)),
-            Triangle(Point3f(0.0f, -phi, 1.0f), Point3f(phi, -1.0f, 0), Point3f(0.0f, -phi, -1.0f)),
-            Triangle(Point3f(0.0f, -phi, 1.0f), Point3f(0.0f, -phi, -1.0f), Point3f(-phi, -1.0f, 0.0f)),
+            Triangle(Point3f(0.f, -phi, 1.f), Point3f(-phi, -1.f, 0.f), Point3f(-1.f, 0.f, phi)),
+            Triangle(Point3f(0.f, -phi, 1.f), Point3f(-1.f, 0.f, phi), Point3f(1.f, 0.f, phi)),
+            Triangle(Point3f(0.f, -phi, 1.f), Point3f(1.f, 0.f, phi), Point3f(phi, -1.f, 0.f)),
+            Triangle(Point3f(0.f, -phi, 1.f), Point3f(phi, -1.f, 0.f), Point3f(0.f, -phi, -1.f)),
+            Triangle(Point3f(0.f, -phi, 1.f), Point3f(0.f, -phi, -1.f), Point3f(-phi, -1.f, 0.f)),
 
-            Triangle(Point3f(0.0f, phi, -1.0f), Point3f(-phi, 1.0f, 0.0f), Point3f(0.0f, phi, 1.0f)),
-            Triangle(Point3f(0.0f, phi, -1.0f), Point3f(0.0f, phi, 1.0f), Point3f(phi, 1.0f, 0.0f)),
-            Triangle(Point3f(0.0f, phi, -1.0f), Point3f(phi, 1.0f, 0.0f), Point3f(1.0f, 0.0f, -phi)),
-            Triangle(Point3f(0.0f, phi, -1.0f), Point3f(1.0f, 0.0f, -phi), Point3f(-1.0f, 0.0f, -phi)),
-            Triangle(Point3f(0.0f, phi, -1.0f), Point3f(-1.0f, 0.0f, -phi), Point3f(-phi, 1.0f, 0.0f)),
+            Triangle(Point3f(0.f, phi, -1.f), Point3f(-phi, 1.f, 0.f), Point3f(0.f, phi, 1.f)),
+            Triangle(Point3f(0.f, phi, -1.f), Point3f(0.f, phi, 1.f), Point3f(phi, 1.f, 0.f)),
+            Triangle(Point3f(0.f, phi, -1.f), Point3f(phi, 1.f, 0.f), Point3f(1.f, 0.f, -phi)),
+            Triangle(Point3f(0.f, phi, -1.f), Point3f(1.f, 0.f, -phi), Point3f(-1.f, 0.f, -phi)),
+            Triangle(Point3f(0.f, phi, -1.f), Point3f(-1.f, 0.f, -phi), Point3f(-phi, 1.f, 0.f)),
 
-            Triangle(Point3f(0.0f, -phi, -1.0f), Point3f(-1,0,-phi), Point3f(-phi,-1,0)),
-            Triangle(Point3f(-1, 0, -phi), Point3f(-phi,-1,0), Point3f(-phi,1,0)),
-            Triangle(Point3f(-phi,-1,0), Point3f(-phi,1,0), Point3f(-1,0,phi)),
-            Triangle(Point3f(-phi,1,0), Point3f(-1,0,phi), Point3f(0,phi,1)),
-            Triangle(Point3f(-1,0,phi), Point3f(0,phi,1), Point3f(1,0,phi)),
-            Triangle(Point3f(1,0,phi), Point3f(0,phi,1), Point3f(phi,1,0)),
-            Triangle(Point3f(phi,-1,0), Point3f(phi,1,0), Point3f(1,0,phi)),
-            Triangle(Point3f(phi,1,0), Point3f(phi,-1,0), Point3f(1,0,-phi)),
-            Triangle(Point3f(0,-phi,-1), Point3f(phi,-1,0), Point3f(1,0,-phi)),
-            Triangle(Point3f(0,-phi,-1), Point3f(-1,0,-phi), Point3f(1,0,-phi))
+            Triangle(Point3f(0.f, -phi, -1.f), Point3f(-1.f,0.f,-phi), Point3f(-phi,-1.f,0)),
+            Triangle(Point3f(-1.f, 0.f, -phi), Point3f(-phi,-1.f,0), Point3f(-phi,1.f,0)),
+            Triangle(Point3f(-phi,-1.f,0), Point3f(-phi,1.f,0), Point3f(-1.f,0.f,phi)),
+            Triangle(Point3f(-phi,1.f,0), Point3f(-1.f,0.f,phi), Point3f(0.f,phi,1)),
+            Triangle(Point3f(-1.f,0.f,phi), Point3f(0.f,phi,1), Point3f(1.f,0.f,phi)),
+            Triangle(Point3f(1.f,0.f,phi), Point3f(0.f,phi,1), Point3f(phi,1.f,0)),
+            Triangle(Point3f(phi,-1.f,0), Point3f(phi,1.f,0), Point3f(1.f,0.f,phi)),
+            Triangle(Point3f(phi,1.f,0), Point3f(phi,-1.f,0), Point3f(1.f,0.f,-phi)),
+            Triangle(Point3f(0.f,-phi,-1), Point3f(phi,-1.f,0), Point3f(1.f,0.f,-phi)),
+            Triangle(Point3f(0.f,-phi,-1), Point3f(-1.f,0.f,-phi), Point3f(1.f,0.f,-phi))
         };
 
         for (const auto& tr : sphere)
@@ -451,31 +451,31 @@ namespace STL
 {
     void generateExamples()
     {
-        save("stlExample_points", std::vector<Point3f>{ {0, 0, 0}, { 1,1,0 }, { 2,0,0 }, { 3,1,0 }, { 4,0,0 } });
+        save("stlExample_points", std::vector<Point3f>{ {0.f, 0.f, 0.f}, { 1.f,1.f,0.f }, { 2.f,0.f,0.f }, { 3.f,1.f,0.f }, { 4.f,0.f,0.f } });
 
-        save("stlExample_spheres", sphere({ {0,0,0}, {5,5,5}, {5,0,0}, {0,5,0}, {0,0,5} }));
+        save("stlExample_spheres", sphere({ {0.f,0.f,0.f}, {5.f,5.f,5.f}, {5.f,0.f,0.f}, {0.f,5.f,0.f}, {0.f,0.f,5.f} }));
 
-        save("stlExample_lineChain", line({ {0,0,0}, {1,2,3}, {1,3,4}, {4,0,0}, {0,0,0} }));
+        save("stlExample_lineChain", line({ {0.f,0.f,0.f}, {1.f,2.f,3.f}, {1.f,3.f,4.f}, {4.f,0.f,0.f}, {0.f,0.f,0.f} }));
 
-        saveInc("stlExample_directionChain", direction({ {0,0,0}, {1,2,3}, {1,3,4}, {4,0,0}, {0,0,0} }));
-        saveInc("stlExample_directionChain", direction({ {0, 0, 0}, { 1,1,0 }, { 2,0,0 }, { 3,1,0 }, { 4,0,0 } }));
-        saveInc("stlExample_directionChain", direction({ {0,0,0}, {5,5,5}, {5,0,0}, {0,5,0}, {0,0,5} }));
+        saveInc("stlExample_directionChain", direction({ {0.f,0.f,0.f}, {1.f,2.f,3.f}, {1.f,3.f,4.f}, {4.f,0.f,0.f}, {0.f,0.f,0.f} }));
+        saveInc("stlExample_directionChain", direction({ {0.f, 0.f, 0.f}, { 1.f,1.f,0.f }, { 2.f,0.f,0.f}, { 3,1.f,0.f }, { 4.f,0.f,0.f } }));
+        saveInc("stlExample_directionChain", direction({ {0.f,0.f,0.f}, {5.f,5.f,5.f}, {5.f,0.f,0.f}, {0.f,5.f,0.f}, {0.f,0.f,5.f} }));
 
         const std::vector<Triangle> tetraedr = {
-            Triangle({0.0f,0.0f,0.0f},{0.0f,1.0f,1.0f},{1.0f,0.0f,1.0f}),
-            Triangle({0.0f,1.0f,1.0f},{1.0f,1.0f,0.0f},{1.0f,0.0f,1.0f}),
-            Triangle({0.0f,0.0f,0.0f},{1.0f,1.0f,0.0f},{1.0f,0.0f,1.0f}),
-            Triangle({0.0f,0.0f,0.0f},{1.0f,1.0f,0.0f},{0.0f,1.0f,1.0f})
+            Triangle({0.f,0.f,0.f},{0.f,1.f,1.f},{1.f,0.f,1.f}),
+            Triangle({0.f,1.f,1.f},{1.f,1.f,0.f},{1.f,0.f,1.f}),
+            Triangle({0.f,0.f,0.f},{1.f,1.f,0.f},{1.f,0.f,1.f}),
+            Triangle({0.f,0.f,0.f},{1.f,1.f,0.f},{0.f,1.f,1.f})
         };
         save("stlExample_tetraedr", tetraedr);
 
         Model3D cube;
-        cube.addQuad({ 0,0,0 }, { 0,0,1 }, { 1,0,1 }, { 1,0,0 });
-        cube.addQuad({ 0,1,0 }, { 0,1,1 }, { 1,1,1 }, { 1,1,0 });
-        cube.addQuad({ 0,0,0 }, { 0,0,1 }, { 0,1,1 }, { 0,1,0 });
-        cube.addQuad({ 1,0,0 }, { 1,1,0 }, { 1,1,1 }, { 1,0,1 });
-        cube.addQuad({ 0,1,0 }, { 0,0,0 }, { 1,0,0 }, { 1,1,0 });
-        cube.addQuad({ 0,0,1 }, { 0,1,1 }, { 1,1,1 }, { 1,0,1 });
+        cube.addQuad({ 0.f,0.f,0.f }, { 0.f,0.f,1.f }, { 1.f,0.f,1.f }, { 1.f,0.f,0.f });
+        cube.addQuad({ 0.f,1.f,0.f }, { 0.f,1.f,1.f }, { 1.f,1.f,1.f }, { 1.f,1.f,0.f });
+        cube.addQuad({ 0.f,0.f,0.f }, { 0.f,0.f,1.f }, { 0.f,1.f,1.f }, { 0.f,1.f,0.f });
+        cube.addQuad({ 1.f,0.f,0.f }, { 1.f,1.f,0.f }, { 1.f,1.f,1.f }, { 1.f,0.f,1.f });
+        cube.addQuad({ 0.f,1.f,0.f }, { 0.f,0.f,0.f }, { 1.f,0.f,0.f }, { 1.f,1.f,0.f });
+        cube.addQuad({ 0.f,0.f,1.f }, { 0.f,1.f,1.f }, { 1.f,1.f,1.f }, { 1.f,0.f,1.f });
         save("stlExample_cube", cube);
     }
 }
