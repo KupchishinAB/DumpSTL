@@ -8,8 +8,8 @@
 namespace STL //settings
 {
     constexpr bool isEnable = true;
-    constexpr std::string_view folderSTL = "";
-    //constexpr std::string_view folderSTL = "C:\\Repos\\STL\\";
+    //constexpr std::string_view folderSTL = "";
+    constexpr std::string_view folderSTL = "C:\\Repos\\STL\\";
     constexpr float coneBaseSize = 1.f / 20.f; //ratio length and size of base
     constexpr float oneSphereRadius = 0.1f; //
     constexpr float ratioSphereRadius = 0.025f;
@@ -340,20 +340,24 @@ namespace STL //custom
     Model3D direction(const std::vector<Point3f>& points)
     {
         Model3D res;
-        for (int i = 0; i < (int)points.size() - 1; i++)
+        if (points.empty())
+            return res;
+        for (auto point = points.begin(), pointNext = point+1; 
+            pointNext != points.end(); ++point, ++pointNext)
         {
-            res.addCone(points[i], points[i + 1]);
+            res.addCone(*point, *pointNext);
         }
         return res;
     }
     Model3D line(const std::vector<Point3f>& points)
     {
-        if (points.empty())
-            return {};
         Model3D res;
-        for (size_t i = 0; i < points.size() - 1; i++)
+        if (points.empty())
+            return res;
+        for (auto point = points.begin(), pointNext = point + 1;
+            pointNext != points.end(); ++point, ++pointNext)
         {
-            res.addEdge(points[i], points[i + 1]);
+            res.addEdge(*point, *pointNext);
         }
         return res;
     }
@@ -379,9 +383,9 @@ namespace STL //custom
         }
 
         Model3D res;
-        for (size_t i = 0; i < points.size(); i++)
+        for (const auto& pt : points)
         {
-            res.addSphere(points[i], radius);
+            res.addSphere(pt, radius);
         }
         return res;
     }
