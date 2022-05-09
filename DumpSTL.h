@@ -439,7 +439,7 @@ namespace STL
         fName += fpath;
         fName += "_";
 
-        int index = 0;
+        auto index = 0;
         std::string indexStr = "0";
         while (std::filesystem::exists(fName + indexStr + ".stl"))
         {
