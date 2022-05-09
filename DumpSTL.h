@@ -7,11 +7,12 @@
 
 namespace STL //settings
 {
-    bool isEnable = true;
-    const std::string folderSTL = "C:\\Repos\\STL\\";
-    const float coneBaseSize = 1.0f / 20.0f; //ratio length and size of base
-    const float oneSphereRadius = 0.1f; //
-    const float ratioSphereRadius = 0.025f;
+    constexpr bool isEnable = true;
+    constexpr std::string_view folderSTL = "";
+    //constexpr std::string_view folderSTL = "C:\\Repos\\STL\\";
+    constexpr float coneBaseSize = 1.0f / 20.0f; //ratio length and size of base
+    constexpr float oneSphereRadius = 0.1f; //
+    constexpr float ratioSphereRadius = 0.025f;
 }
 
 namespace STL //header
@@ -63,8 +64,10 @@ namespace STL //header
     {
         std::vector<Triangle> _triangles;
 
-        void exportTxt(const std::string& str) const;
-        void exportBin(const std::string& str) const;
+        void exportTxt(std::string_view str) const;
+        void exportTxt(std::string&& str) const;
+        void exportBin(std::string_view str) const;
+        void exportBin(std::string&& str) const;
 
         void addTriangle(const Triangle& triangle);
         void addTriangle(Triangle&& triangle);
@@ -74,6 +77,8 @@ namespace STL //header
         void addQuad(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3, const Point3f& pt4);
         void addCone(const Point3f& pt1, const Point3f& pt2, float baseSize = coneBaseSize);
         void addSphere(const Point3f& center, float radius);
+
+        static constexpr std::string_view extension = ".stl";
     };
 }
 
@@ -185,12 +190,11 @@ namespace STL //source
     }
 
     ///////////////////////////////////////////////// Model3D
-    void Model3D::exportTxt(const std::string& str) const
+    static void exportTxt(std::string_view filename, const std::vector<Triangle>& triangles )
     {
         std::ofstream file;
-        file.open(str + ".stl", std::ios::out);
         file << "solid \n";
-        for (const auto& triangle : _triangles)
+        for (const auto& triangle : triangles)
         {
             file << "\n";
             file << "facet normal " << 0.0 << " " << 0.0 << " " << 1.0 << '\n';
@@ -203,20 +207,43 @@ namespace STL //source
         }
         file.close();
     }
-    void Model3D::exportBin(const std::string& str) const
+    void Model3D::exportTxt(std::string_view str) const
+    {
+        std::string filename(str);
+        filename += extension;
+        STL::exportTxt(std::string_view(filename), _triangles);
+    }
+    void Model3D::exportTxt(std::string&& filename) const
+    {
+        filename += extension;
+        STL::exportTxt(std::string_view(filename), _triangles);
+    }
+    static void exportBin(std::string_view filename, const std::vector<Triangle>& triangles)
+    {
+        std::fstream file;
+        file.open(filename, std::ios::out | std::ios::binary);
+        if (!file.is_open())
+            return;
+        unsigned int dummy[21];
+        dummy[20] = (unsigned int)triangles.size();
+        file.write((char*)dummy, 84);
+        file.write((char*)&(triangles[0]), static_cast<std::streamsize>(triangles.size()) * 50);
+        file.close();
+    }
+    void Model3D::exportBin(std::string_view str) const
     {
         if (_triangles.empty())
             return;
-        std::fstream file;
-        file.open(str + ".stl", std::ios::out | std::ios::binary);
-        if (!file.is_open())
+        std::string filename(str);
+        filename += extension;
+        STL::exportBin(std::string_view(filename), _triangles);
+    }
+    void Model3D::exportBin(std::string&& str) const
+    {
+        if (_triangles.empty())
             return;
-
-        unsigned int dummy[21];
-        dummy[20] = (unsigned int)_triangles.size();
-        file.write((char*)dummy, 84);
-        file.write((char*)&(_triangles[0]), static_cast<std::streamsize>(_triangles.size()) * 50);
-        file.close();
+        str += extension;
+        STL::exportBin(std::string_view(str), _triangles);
     }
 
     void Model3D::addTriangle(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3)
@@ -383,30 +410,40 @@ namespace STL //custom
 namespace STL
 {
     template<typename... Args>
-    void save(const std::string& fpath, Args... args)
+    void save(std::string_view fpath, Args... args)
     {
         if (!isEnable)
             return;
-        convert(args...).exportBin(STL::folderSTL + fpath);
+        std::string filename(STL::folderSTL);
+        filename += fpath;
+        convert(args...).exportBin(std::move(filename));
     }
 
-    void save(const std::string& fpath, const Model3D& model)
+    void save(std::string_view fpath, const Model3D& model)
     {
         if (!isEnable)
             return;
-        model.exportBin(STL::folderSTL + fpath);
+        std::string filename(STL::folderSTL);
+        filename += fpath;
+        model.exportBin(std::move(filename));
     }
 
     template<typename... Args>
-    void saveInc(const std::string& fpath, Args... args)
+    void saveInc(std::string_view fpath, Args... args)
     {
-        std::string fName = STL::folderSTL + fpath;
+        std::string fName(STL::folderSTL);
+        fName += fpath;
+        fName += "_";
+
         int index = 0;
-        while (std::filesystem::exists(fName + "_" + std::to_string(index) + ".stl"))
+        std::string indexStr = "0";
+        while (std::filesystem::exists(fName + indexStr + ".stl"))
         {
-            index++;
+            ++index;
+            indexStr = std::to_string(index);
         }
-        save(fpath + "_" + std::to_string(index), args...);
+        fName += indexStr;
+        save(std::move(fName), args...);
     }
 }
 
