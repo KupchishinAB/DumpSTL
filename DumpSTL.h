@@ -21,9 +21,9 @@ namespace STL //header
     template <typename T>
     struct Point3
     {
-        T _x;
-        T _y;
-        T _z;
+        T x;
+        T y;
+        T z;
 
         constexpr Point3(T x, T y, T z);
         Point3() = default;
@@ -43,10 +43,10 @@ namespace STL //header
 #pragma pack(push, 1)
     struct Triangle
     {
-        Point3f _norm = Point3f(0.0f, 0.0f, 1.0f); //for export STL
-        Point3f _vertice0;
-        Point3f _vertice1;
-        Point3f _vertice2;
+        Point3f norm = Point3f(0.0f, 0.0f, 1.0f); //for export STL
+        Point3f vertice0;
+        Point3f vertice1;
+        Point3f vertice2;
         char dummy0 = 0; //for export STL
         char dummy1 = 0; //for export STL
 
@@ -62,7 +62,7 @@ namespace STL //header
 
     struct Model3D
     {
-        std::vector<Triangle> _triangles;
+        std::vector<Triangle> triangles;
 
         void exportTxt(std::string_view str) const;
         void exportTxt(std::string&& str) const;
@@ -85,83 +85,83 @@ namespace STL //header
 namespace STL //source
 {
     ///////////////////////////////////////////////// Point3
-    template <typename T> constexpr Point3<T>::Point3<T>(T x, T y, T z)
-        : _x(x), _y(y), _z(z)
+    template <typename T> constexpr Point3<T>::Point3(T coordX, T coordY, T coordZ)
+        : x(coordX), y(coordY), z(coordZ)
     {
     }
     template <typename T> Point3<T> Point3<T>::normalize() const
     {
-        T norm = sqrt(_x * _x + _y * _y + _z * _z);
-        return Point3<T>(_x / norm, _y / norm, _z / norm);
+        T norm = sqrt(x * x + y * y + z * z);
+        return Point3<T>(x / norm, y / norm, z / norm);
     }
     template <typename T> Point3<T>& Point3<T>::operator+=(const Point3<T>& pt)
     {
-        _x += pt._x;
-        _y += pt._y;
-        _z += pt._z;
+        x += pt.x;
+        y += pt.y;
+        z += pt.z;
         return *this;
     }
     template <typename T> Point3<T>& Point3<T>::operator-=(const Point3<T>& pt)
     {
-        _x -= pt._x;
-        _y -= pt._y;
-        _z -= pt._z;
+        x -= pt.x;
+        y -= pt.y;
+        z -= pt.z;
         return *this;
     }
     template <typename T> float Point3<T>::distance(const Point3<T>& pt) const
     {
-        return sqrt((_x - pt._x) * (_x - pt._x)
-            + (_y - pt._y) * (_y - pt._y)
-            + (_z - pt._z) * (_z - pt._z));
+        return sqrt((x - pt.x) * (x - pt.x)
+            + (y - pt.y) * (y - pt.y)
+            + (z - pt.z) * (z - pt.z));
     }
     template <typename T> Point3<T> Point3<T>::cross_product(const Point3<T>& pt) const
     {
-        return { _y * pt._z - _z * pt._y,
-            -(_x * pt._z - pt._x * _z),
-            _x * pt._y - pt._x * _y };
+        return { y * pt.z - z * pt.y,
+            -(x * pt.z - pt.x * z),
+            x * pt.y - pt.x * y };
     }
     template <typename T> Point3<T> operator-(const Point3<T>& pt1, const Point3<T>& pt2)
     {
-        return Point3<T>(pt1._x - pt2._x, pt1._y - pt2._y, pt1._z - pt2._z);
+        return Point3<T>(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
     }
     template <typename T> Point3<T> operator+(const Point3<T>& pt1, const Point3<T>& pt2)
     {
-        return Point3<T>(pt1._x + pt2._x, pt1._y + pt2._y, pt1._z + pt2._z);
+        return Point3<T>(pt1.x + pt2.x, pt1.y + pt2.y, pt1.z + pt2.z);
     }
 
     template<typename T> Point3<T> operator*(const Point3<T>& pt, T val)
     {
-        return Point3<T>(pt._x * val, pt._y * val, pt._z * val);
+        return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
     }
     template<typename T> Point3<T> operator*(T val, const Point3<T>& pt)
     {
-        return Point3<T>(pt._x * val, pt._y * val, pt._z * val);
+        return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
     }
     template<typename T> Point3<T>& Point3<T>::operator*=(T val)
     {
-        _x = *val;
-        _y = *val;
-        _z = *val;
+        x = *val;
+        y = *val;
+        z = *val;
     }
     template<typename T> Point3<T> operator/(const Point3<T>& pt, T val)
     {
-        return Point3<T>(pt._x / val, pt._y / val, pt._z / val);
+        return Point3<T>(pt.x / val, pt.y / val, pt.z / val);
     }
     template<typename T> Point3<T>& Point3<T>::operator/=(T val)
     {
-        _x /= val;
-        _y /= val;
-        _z /= val;
+        x /= val;
+        y /= val;
+        z /= val;
         return *this;
     }
 
     ///////////////////////////////////////////////// Triangle
     constexpr Triangle::Triangle(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3)
-        : _vertice0(pt1), _vertice1(pt2), _vertice2(pt3)
+        : vertice0(pt1), vertice1(pt2), vertice2(pt3)
     {
     }
     constexpr Triangle::Triangle(Point3f&& pt1, Point3f&& pt2, Point3f&& pt3)
-        : _vertice0(std::move(pt1)), _vertice1(std::move(pt2)), _vertice2(std::move(pt3))
+        : vertice0(std::move(pt1)), vertice1(std::move(pt2)), vertice2(std::move(pt3))
     {
     }
     float Triangle::getArea(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3)
@@ -175,18 +175,18 @@ namespace STL //source
     Point3f& Triangle::operator[] (int index)
     {
         if (index == 0)
-            return _vertice0;
+            return vertice0;
         if (index == 1)
-            return _vertice1;
-        return _vertice2;
+            return vertice1;
+        return vertice2;
     }
     const Point3f& Triangle::operator[] (int index) const
     {
         if (index == 0)
-            return _vertice0;
+            return vertice0;
         if (index == 1)
-            return _vertice1;
-        return _vertice2;
+            return vertice1;
+        return vertice2;
     }
 
     ///////////////////////////////////////////////// Model3D
@@ -199,9 +199,9 @@ namespace STL //source
             file << "\n";
             file << "facet normal " << 0.0 << " " << 0.0 << " " << 1.0 << '\n';
             file << "outer loop\n";
-            file << "vertex " << triangle[0]._x << " " << triangle[0]._y << " " << triangle[0]._z << '\n';
-            file << "vertex " << triangle[1]._x << " " << triangle[1]._y << " " << triangle[1]._z << '\n';
-            file << "vertex " << triangle[2]._x << " " << triangle[2]._y << " " << triangle[2]._z << '\n';
+            file << "vertex " << triangle[0].x << " " << triangle[0].y << " " << triangle[0].z << '\n';
+            file << "vertex " << triangle[1].x << " " << triangle[1].y << " " << triangle[1].z << '\n';
+            file << "vertex " << triangle[2].x << " " << triangle[2].y << " " << triangle[2].z << '\n';
             file << "endloop\n";
             file << "endfacet\n";
         }
@@ -211,12 +211,12 @@ namespace STL //source
     {
         std::string filename(str);
         filename += extension;
-        STL::exportTxt(std::string_view(filename), _triangles);
+        STL::exportTxt(std::string_view(filename), triangles);
     }
     void Model3D::exportTxt(std::string&& filename) const
     {
         filename += extension;
-        STL::exportTxt(std::string_view(filename), _triangles);
+        STL::exportTxt(std::string_view(filename), triangles);
     }
     static void exportBin(std::string_view filename, const std::vector<Triangle>& triangles)
     {
@@ -232,47 +232,47 @@ namespace STL //source
     }
     void Model3D::exportBin(std::string_view str) const
     {
-        if (_triangles.empty())
+        if (triangles.empty())
             return;
         std::string filename(str);
         filename += extension;
-        STL::exportBin(std::string_view(filename), _triangles);
+        STL::exportBin(std::string_view(filename), triangles);
     }
     void Model3D::exportBin(std::string&& str) const
     {
-        if (_triangles.empty())
+        if (triangles.empty())
             return;
         str += extension;
-        STL::exportBin(std::string_view(str), _triangles);
+        STL::exportBin(std::string_view(str), triangles);
     }
 
     void Model3D::addTriangle(const Point3f& pt1, const Point3f& pt2, const Point3f& pt3)
     {
-        _triangles.emplace_back(Triangle(pt1, pt2, pt3));
+        triangles.emplace_back(Triangle(pt1, pt2, pt3));
     }
     void Model3D::addTriangle(const Triangle& triangle)
     {
-        _triangles.emplace_back(triangle);
+        triangles.emplace_back(triangle);
     }
     void Model3D::addTriangle(Triangle&& triangle)
     {
-        _triangles.emplace_back(triangle);
+        triangles.emplace_back(triangle);
     }
     void Model3D::addPoint(const Point3f& pt1)
     {
-        _triangles.emplace_back(Triangle(pt1, pt1, pt1));
+        triangles.emplace_back(Triangle(pt1, pt1, pt1));
     }
     void Model3D::addEdge(const Point3f& pt1, const Point3f& pt2)
     {
-        _triangles.emplace_back(Triangle(pt1, pt2, pt2));
+        triangles.emplace_back(Triangle(pt1, pt2, pt2));
     }
     void Model3D::addCone(const Point3f& pt1, const Point3f& pt2, float baseSize)
     {
         const auto directionCone = (pt2 - pt1).normalize();
         std::vector<std::pair<float, Point3f>> bidders = {
-            {directionCone._x, Point3f{1.0f, 0.0f, 0.0f} },
-            {directionCone._y, Point3f{0.0f, 1.0f, 0.0f} },
-            {directionCone._z, Point3f{0.0f, 0.0f, 1.0f} },
+            {directionCone.x, Point3f{1.0f, 0.0f, 0.0f} },
+            {directionCone.y, Point3f{0.0f, 1.0f, 0.0f} },
+            {directionCone.z, Point3f{0.0f, 0.0f, 1.0f} },
         };
         std::sort(bidders.begin(), bidders.end(), [](const auto& a, const auto& b) {
             return a.first < b.first;
@@ -291,13 +291,13 @@ namespace STL //source
         if (fmin(Triangle::getArea(pt1, pt2, pt3), Triangle::getArea(pt1, pt3, pt4))
             < fmin(Triangle::getArea(pt1, pt2, pt4), Triangle::getArea(pt2, pt3, pt4)))
         {
-            _triangles.emplace_back(Triangle(pt1, pt2, pt4));
-            _triangles.emplace_back(Triangle(pt2, pt3, pt4));
+            triangles.emplace_back(Triangle(pt1, pt2, pt4));
+            triangles.emplace_back(Triangle(pt2, pt3, pt4));
         }
         else
         {
-            _triangles.emplace_back(Triangle(pt1, pt2, pt3));
-            _triangles.emplace_back(Triangle(pt1, pt3, pt4));
+            triangles.emplace_back(Triangle(pt1, pt2, pt3));
+            triangles.emplace_back(Triangle(pt1, pt3, pt4));
         }
     }
     void Model3D::addSphere(const Point3f& center, float radius)
@@ -368,12 +368,12 @@ namespace STL //custom
             Point3f min = points[0], max = points[0];
             for (const auto& pt : points)
             {
-                min._x = std::fmin(pt._x, min._x);
-                min._y = std::fmin(pt._y, min._y);
-                min._z = std::fmin(pt._z, min._z);
-                max._x = std::fmax(pt._x, max._x);
-                max._y = std::fmax(pt._y, max._y);
-                max._z = std::fmax(pt._z, max._z);
+                min.x = std::fmin(pt.x, min.x);
+                min.y = std::fmin(pt.y, min.y);
+                min.z = std::fmin(pt.z, min.z);
+                max.x = std::fmax(pt.x, max.x);
+                max.y = std::fmax(pt.y, max.y);
+                max.z = std::fmax(pt.z, max.z);
             }
             radius = max.distance(min) * ratioSphereRadius;
         }
