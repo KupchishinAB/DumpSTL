@@ -1,9 +1,10 @@
-#pragma once
+﻿#pragma once
 
 #include <filesystem>
 #include <fstream>
 #include <math.h>
 #include <string>
+#include <sstream>
 
 namespace DUMP // settings
 {
@@ -13,7 +14,8 @@ constexpr std::string_view folderSTL = "";
 constexpr float coneBaseSize = 1.f / 20.f; // ratio length and size of base
 constexpr float oneSphereRadius = 0.1f;    //
 constexpr float ratioSphereRadius = 0.025f;
-constexpr std::string_view fileExtend = ".stl";
+constexpr std::string_view fileExtension = ".stl";
+constexpr char fileNameSeparator = '_';
 } // namespace DUMP
 
 namespace DUMP // header
@@ -33,8 +35,8 @@ template <typename T> struct Point3 {
 
   Point3<T> &operator+=(const Point3<T> &);
   Point3<T> &operator-=(const Point3<T> &);
-  Point3<T> &operator/=(const T value);
-  Point3<T> &operator*=(const T value);
+  Point3<T> &operator/=(const T);
+  Point3<T> &operator*=(const T);
 };
 #pragma pack(pop)
 using Point3f = Point3<float>;
@@ -42,9 +44,9 @@ using Point3f = Point3<float>;
 #pragma pack(push, 1)
 struct Triangle {
   Point3f norm = Point3f(0.f, 0.f, 1.f); // for export STL
-  Point3f vertice0;
-  Point3f vertice1;
-  Point3f vertice2;
+  Point3f vertex0;
+  Point3f vertex1;
+  Point3f vertex2;
   char dummy0 = 0; // for export STL
   char dummy1 = 0; // for export STL
 
@@ -68,18 +70,16 @@ struct Model3D {
   void exportBin(std::string_view str) const;
   void exportBin(std::string &&str) const;
 
-  void addTriangle(const Triangle &triangle);
-  void addTriangle(Triangle &&triangle);
-  void addTriangle(const Point3f &pt1, const Point3f &pt2, const Point3f &pt3);
-  void addPoint(const Point3f &pt1);
-  void addEdge(const Point3f &pt1, const Point3f &pt2);
-  void addQuad(const Point3f &pt1, const Point3f &pt2, const Point3f &pt3,
+  Model3D& addTriangle(const Triangle &triangle);
+  Model3D& addTriangle(Triangle &&triangle);
+  Model3D& addTriangle(const Point3f &pt1, const Point3f &pt2, const Point3f &pt3);
+  Model3D& addPoint(const Point3f &pt1);
+  Model3D& addEdge(const Point3f &pt1, const Point3f &pt2);
+  Model3D& addQuad(const Point3f &pt1, const Point3f &pt2, const Point3f &pt3,
                const Point3f &pt4);
-  void addCone(const Point3f &pt1, const Point3f &pt2,
+  Model3D& addCone(const Point3f &pt1, const Point3f &pt2,
                const float baseSize = coneBaseSize);
-  void addSphere(const Point3f &center, const float radius);
-
-  static constexpr std::string_view extension = ".stl";
+  Model3D& addSphere(const Point3f &center, const float radius);
 };
 } // namespace DUMP
 
@@ -146,10 +146,10 @@ template <typename T> Point3<T> &Point3<T>::operator/=(const T val) {
 ///////////////////////////////////////////////// Triangle
 constexpr Triangle::Triangle(const Point3f &pt1, const Point3f &pt2,
                              const Point3f &pt3)
-    : vertice0(pt1), vertice1(pt2), vertice2(pt3) {}
+    : vertex0(pt1), vertex1(pt2), vertex2(pt3) {}
 constexpr Triangle::Triangle(Point3f &&pt1, Point3f &&pt2, Point3f &&pt3)
-    : vertice0(std::move(pt1)), vertice1(std::move(pt2)),
-      vertice2(std::move(pt3)) {}
+    : vertex0(std::move(pt1)), vertex1(std::move(pt2)),
+      vertex2(std::move(pt3)) {}
 float Triangle::getArea(const Point3f &pt1, const Point3f &pt2,
                         const Point3f &pt3) {
   float a = pt1.distance(pt2);
@@ -160,23 +160,24 @@ float Triangle::getArea(const Point3f &pt1, const Point3f &pt2,
 }
 Point3f &Triangle::operator[](const int index) {
   if (index == 0)
-    return vertice0;
+    return vertex0;
   if (index == 1)
-    return vertice1;
-  return vertice2;
+    return vertex1;
+  return vertex2;
 }
 const Point3f &Triangle::operator[](const int index) const {
   if (index == 0)
-    return vertice0;
+    return vertex0;
   if (index == 1)
-    return vertice1;
-  return vertice2;
+    return vertex1;
+  return vertex2;
 }
 
 ///////////////////////////////////////////////// Model3D
-static void exportTxt(std::string_view filename,
+void exportTxt(std::string_view filename,
                       const std::vector<Triangle> &triangles) {
   std::ofstream file;
+  file.open(filename, std::ios::out);
   file << "solid \n";
   for (const auto &triangle : triangles) {
     file << "\n";
@@ -195,11 +196,11 @@ static void exportTxt(std::string_view filename,
 }
 void Model3D::exportTxt(std::string_view str) const {
   std::string filename(str);
-  filename += extension;
+  filename += fileExtension;
   DUMP::exportTxt(std::string_view(filename), triangles);
 }
 void Model3D::exportTxt(std::string &&filename) const {
-  filename += extension;
+  filename += fileExtension;
   DUMP::exportTxt(std::string_view(filename), triangles);
 }
 static void exportBin(std::string_view filename,
@@ -219,33 +220,38 @@ void Model3D::exportBin(std::string_view str) const {
   if (triangles.empty())
     return;
   std::string filename(str);
-  filename += extension;
+  filename += fileExtension;
   DUMP::exportBin(std::string_view(filename), triangles);
 }
 void Model3D::exportBin(std::string &&str) const {
   if (triangles.empty())
     return;
-  str += extension;
+  str += fileExtension;
   DUMP::exportBin(std::string_view(str), triangles);
 }
 
-void Model3D::addTriangle(const Point3f &pt1, const Point3f &pt2,
+Model3D& Model3D::addTriangle(const Point3f &pt1, const Point3f &pt2,
                           const Point3f &pt3) {
   triangles.emplace_back(Triangle(pt1, pt2, pt3));
+  return *this;
 }
-void Model3D::addTriangle(const Triangle &triangle) {
+Model3D& Model3D::addTriangle(const Triangle &triangle) {
   triangles.emplace_back(triangle);
+  return *this;
 }
-void Model3D::addTriangle(Triangle &&triangle) {
+Model3D& Model3D::addTriangle(Triangle &&triangle) {
   triangles.emplace_back(triangle);
+  return *this;
 }
-void Model3D::addPoint(const Point3f &pt1) {
+Model3D& Model3D::addPoint(const Point3f &pt1) {
   triangles.emplace_back(Triangle(pt1, pt1, pt1));
+  return *this;
 }
-void Model3D::addEdge(const Point3f &pt1, const Point3f &pt2) {
+Model3D& Model3D::addEdge(const Point3f &pt1, const Point3f &pt2) {
   triangles.emplace_back(Triangle(pt1, pt2, pt2));
+  return *this;
 }
-void Model3D::addCone(const Point3f &pt1, const Point3f &pt2,
+Model3D& Model3D::addCone(const Point3f &pt1, const Point3f &pt2,
                       const float baseSize) {
   const auto directionCone = (pt2 - pt1).normalize();
   std::vector<std::pair<float, Point3f>> bidders = {
@@ -265,8 +271,9 @@ void Model3D::addCone(const Point3f &pt1, const Point3f &pt2,
   addTriangle(pt1 + basisY, pt1 - basisX, pt2);
   addTriangle(pt1 - basisX, pt1 - basisY, pt2);
   addTriangle(pt1 - basisY, pt1 + basisX, pt2);
+  return *this;
 }
-void Model3D::addQuad(const Point3f &pt1, const Point3f &pt2,
+Model3D& Model3D::addQuad(const Point3f &pt1, const Point3f &pt2,
                       const Point3f &pt3, const Point3f &pt4) {
   if (fmin(Triangle::getArea(pt1, pt2, pt3), Triangle::getArea(pt1, pt3, pt4)) <
       fmin(Triangle::getArea(pt1, pt2, pt4),
@@ -277,8 +284,9 @@ void Model3D::addQuad(const Point3f &pt1, const Point3f &pt2,
     triangles.emplace_back(Triangle(pt1, pt2, pt3));
     triangles.emplace_back(Triangle(pt1, pt3, pt4));
   }
+  return *this;
 }
-void Model3D::addSphere(const Point3f &center, const float radius) {
+Model3D& Model3D::addSphere(const Point3f &center, const float radius) {
   constexpr float phi = 1.61803398875f;
   constexpr Triangle sphere[] = {
       Triangle(Point3f(0.f, -phi, 1.f), Point3f(-phi, -1.f, 0.f),
@@ -328,6 +336,7 @@ void Model3D::addSphere(const Point3f &center, const float radius) {
     addTriangle(tr[0] * radius + center, tr[1] * radius + center,
                 tr[2] * radius + center);
   }
+  return *this;
 }
 } // namespace DUMP
 
@@ -389,48 +398,37 @@ Model3D convert(const std::vector<Point3f> &points) {
 }
 Model3D convert(const Triangle &triangle) { return Model3D{{triangle}}; }
 Model3D convert(const std::vector<Triangle> &triangles) {
-  return Model3D{triangles};
+  return Model3D{triangles}; 
 }
 } // namespace DUMP
 
 namespace DUMP {
-template <typename... Args> void save(std::string_view fpath, Args... args) {
+template <typename... Args> void save(std::string_view fileName, Args... args) {
   if (!isEnable)
     return;
-  std::string filename(DUMP::folderSTL);
-  filename += fpath;
-  convert(args...).exportBin(std::move(filename));
+  std::stringstream fullFileName;
+  fullFileName << DUMP::folderSTL << fileName;
+  convert(args...).exportBin(fullFileName.str());
 }
 
-void save(std::string_view fpath, const Model3D &model) {
+void save(std::string_view fileName, const Model3D &model) {
   if (!isEnable)
     return;
-  std::string filename(DUMP::folderSTL);
-  filename += fpath;
-  model.exportBin(std::move(filename));
+  std::stringstream fullFileName;
+  fullFileName << DUMP::folderSTL << fileName;
+  model.exportBin(fullFileName.str());
 }
 
-template <typename... Args> void saveInc(std::string_view fpath, Args... args) {
+template <typename... Args> void saveInc(std::string_view fileName, Args... args) {
   auto index = 0;
-  std::string fName;
-  constexpr char splitter = '_';
-
+  std::stringstream fullFileName;
   auto generateFName = [&]() {
-    fName = DUMP::folderSTL;
-    fName += fpath;
-    fName += '_';
-    fName += std::to_string(index); 
-    fName += fileExtend;
+    fullFileName = std::stringstream();
+    fullFileName << DUMP::folderSTL << fileName << fileNameSeparator << index << fileExtension;
   };
-
-  for (generateFName(); std::filesystem::exists(fName);
-       ++index, generateFName() ) {
-  }
-
-  fName = fpath;
-  fName += '_';
-  fName += std::to_string(index);
-
-  save(std::move(fName), args...);
+  for (generateFName(); std::filesystem::exists(fullFileName.str()); ++index, generateFName());
+  fullFileName = std::stringstream();
+  fullFileName << fileName << fileNameSeparator << index;
+  save(fullFileName.str(), args...);
 }
 } // namespace DUMP
