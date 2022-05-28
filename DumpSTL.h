@@ -26,17 +26,56 @@ template <typename T> struct Point3 {
   T y;
   T z;
 
-  constexpr Point3(const T x, const T y, const T z);
   Point3() = default;
+  constexpr Point3(const T coordX, const T coordY, const T coordZ)
+      : x(coordX), y(coordY), z(coordZ) {}
+  Point3<T> normalize() const {
+    T norm = sqrt(x * x + y * y + z * z);
+    return Point3<T>(x / norm, y / norm, z / norm);
+  }
+  float distance(const Point3<T> &pt) const {
+    return sqrt((x - pt.x) * (x - pt.x) + (y - pt.y) * (y - pt.y) +
+                (z - pt.z) * (z - pt.z));
+  }
+  Point3<T> cross_product(const Point3<T> &pt) const {
+    return {y * pt.z - z * pt.y, -(x * pt.z - pt.x * z), x * pt.y - pt.x * y};
+  }
 
-  Point3<T> normalize() const;
-  float distance(const Point3<T> &pt) const;
-  Point3<T> cross_product(const Point3<T> &pt) const;
-
-  Point3<T> &operator+=(const Point3<T> &);
-  Point3<T> &operator-=(const Point3<T> &);
-  Point3<T> &operator/=(const T);
-  Point3<T> &operator*=(const T);
+  Point3<T> &operator*=(const T val) {
+    x *= val;
+    y *= val;
+    z *= val;
+  }
+  Point3<T> &operator/=(const T val) {
+    x /= val;
+    y /= val;
+    z /= val;
+    return *this;
+  }
+  Point3<T>& operator+=(const Point3<T>& pt) {
+      x += pt.x;
+      y += pt.y;
+      z += pt.z;
+      return *this;
+  }
+  Point3<T>& operator-=(const Point3<T>& pt) {
+      x -= pt.x;
+      y -= pt.y;
+      z -= pt.z;
+      return *this;
+  }
+  Point3<T> operator-(const Point3<T>& pt) const {
+      return Point3<T>(x - pt.x, y - pt.y, z - pt.z);
+  }
+  Point3<T> operator+(const Point3<T>& pt) const {
+      return Point3<T>(x + pt.x, y + pt.y, z + pt.z);
+  }
+  Point3<T> operator*(const T val) const {
+      return Point3<T>(x * val, y * val, z * val);
+  }
+  Point3<T> operator/(const T val) const {
+      return Point3<T>(x / val, y / val, z / val);
+  }
 };
 #pragma pack(pop)
 using Point3f = Point3<float>;
@@ -85,64 +124,6 @@ struct Model3D {
 
 namespace DUMP // source
 {
-///////////////////////////////////////////////// Point3
-template <typename T>
-constexpr Point3<T>::Point3(const T coordX, const T coordY, const T coordZ)
-    : x(coordX), y(coordY), z(coordZ) {}
-template <typename T> Point3<T> Point3<T>::normalize() const {
-  T norm = sqrt(x * x + y * y + z * z);
-  return Point3<T>(x / norm, y / norm, z / norm);
-}
-template <typename T> Point3<T> &Point3<T>::operator+=(const Point3<T> &pt) {
-  x += pt.x;
-  y += pt.y;
-  z += pt.z;
-  return *this;
-}
-template <typename T> Point3<T> &Point3<T>::operator-=(const Point3<T> &pt) {
-  x -= pt.x;
-  y -= pt.y;
-  z -= pt.z;
-  return *this;
-}
-template <typename T> float Point3<T>::distance(const Point3<T> &pt) const {
-  return sqrt((x - pt.x) * (x - pt.x) + (y - pt.y) * (y - pt.y) +
-              (z - pt.z) * (z - pt.z));
-}
-template <typename T>
-Point3<T> Point3<T>::cross_product(const Point3<T> &pt) const {
-  return {y * pt.z - z * pt.y, -(x * pt.z - pt.x * z), x * pt.y - pt.x * y};
-}
-template <typename T>
-Point3<T> operator-(const Point3<T> &pt1, const Point3<T> &pt2) {
-  return Point3<T>(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
-}
-template <typename T>
-Point3<T> operator+(const Point3<T> &pt1, const Point3<T> &pt2) {
-  return Point3<T>(pt1.x + pt2.x, pt1.y + pt2.y, pt1.z + pt2.z);
-}
-
-template <typename T> Point3<T> operator*(const Point3<T> &pt, const T val) {
-  return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
-}
-template <typename T> Point3<T> operator*(const T val, const Point3<T> &pt) {
-  return Point3<T>(pt.x * val, pt.y * val, pt.z * val);
-}
-template <typename T> Point3<T> &Point3<T>::operator*=(const T val) {
-  x *= val;
-  y *= val;
-  z *= val;
-}
-template <typename T> Point3<T> operator/(const Point3<T> &pt, const T val) {
-  return Point3<T>(pt.x / val, pt.y / val, pt.z / val);
-}
-template <typename T> Point3<T> &Point3<T>::operator/=(const T val) {
-  x /= val;
-  y /= val;
-  z /= val;
-  return *this;
-}
-
 ///////////////////////////////////////////////// Triangle
 constexpr Triangle::Triangle(const Point3f &pt1, const Point3f &pt2,
                              const Point3f &pt3)
