@@ -12,7 +12,6 @@ namespace DUMP
 {
     namespace fs=std::filesystem;
     constexpr bool isEnable = true; // global turn off/turn on this tool (without clear code)
-
     constexpr float coneBaseSize = 1.f / 20.f;
     constexpr float oneSphereRadius = 0.1f;
     constexpr float ratioSphereRadius = 0.025f;
@@ -159,9 +158,8 @@ namespace DUMP
             std::cout<<"WriteFile: <"<<filename<<">"<<std::endl;
             file.open(filename, std::ios::out | std::ios::binary);
             if (!file.is_open()) return;
-            unsigned int dummy[21];
+            unsigned int dummy[21]={0};
             dummy[20] = (unsigned int)triangles.size();
-            file.write((char*)dummy, 84);
             file.write(reinterpret_cast<const char*>(dummy), static_cast<std::streamsize>(sizeof(dummy)));
             file.write(reinterpret_cast<const char*>(triangles.data()),static_cast<std::streamsize>(triangles.size()) * sizeof(Triangle));
             file.close();
