@@ -364,7 +364,7 @@ namespace DUMP {
     void saveInc(fs::path fileName, Args... args) {
         auto index = 0;
         fs::path fullFileName;
-        auto generateFName = [&index,fileName,&fullFileName]() {
+       auto generateFName = [&index, &fileName, &fullFileName]() {
             fullFileName= (fileName.parent_path()/(fileName.stem().string()+fileNameSeparator+std::to_string(index))).replace_extension(fileExtension);
             
         };
