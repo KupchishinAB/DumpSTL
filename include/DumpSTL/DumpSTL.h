@@ -163,7 +163,7 @@ namespace DUMP
             const char dummy[header_size_bytes + number_of_triangles_size_bytes]={0};
             dummy[20] = (unsigned int)triangles.size();
             file.write(reinterpret_cast<const char*>(dummy), static_cast<std::streamsize>(sizeof(dummy)));
-            file.write(reinterpret_cast<const char*>(triangles.data()),static_cast<std::streamsize>(triangles.size()) * sizeof(Triangle));
+            file.write(reinterpret_cast<const char*>(triangles.data()), static_cast<std::streamsize>(triangles.size() * sizeof(Triangle)));
             file.close();
         }
         void exportBin(fs::path filename) const {
