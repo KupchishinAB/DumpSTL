@@ -120,7 +120,7 @@ namespace DUMP
         }
     };
 #pragma pack(pop)
-    static_assert(sizeof(Triangle)==50,"Sizeof(Triangle) should be 50"); 
+    static_assert(sizeof(Triangle)==50,"Triangle size should be 50, see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL"); 
 
     struct Model3D {
         std::vector<Triangle> triangles;
