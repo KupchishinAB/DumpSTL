@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <algorithm>
 #include <vector>
 
 namespace DUMP
@@ -123,6 +124,19 @@ namespace DUMP
     static_assert(sizeof(Triangle)==50,"Triangle size should be 50, see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL"); 
 
     struct Model3D {
+
+        struct STLHeader
+        {
+            // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
+            enum
+            {
+                header_size_bytes = 80
+            };
+            char Header[header_size_bytes];
+            uint32_t NumOfTriangles;
+        };
+        static_assert(sizeof(STLHeader)==84,"STLHeader size should be 84, see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL"); 
+
         std::vector<Triangle> triangles;
         static void exportTxt(fs::path filename,
             const std::vector<Triangle>& triangles) {
@@ -158,11 +172,9 @@ namespace DUMP
             std::cout<<"WriteFile: <"<<filename<<">"<<std::endl;
             file.open(filename, std::ios::out | std::ios::binary);
             if (!file.is_open()) return;
-            const unsigned int header_size_bytes = 80; // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
-            const unsigned int number_of_triangles_size_bytes = 4; // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
-            const char dummy[header_size_bytes + number_of_triangles_size_bytes]={0};
-            dummy[20] = (unsigned int)triangles.size();
-            file.write(reinterpret_cast<const char*>(dummy), static_cast<std::streamsize>(sizeof(dummy)));
+            STLHeader  dummy;
+            dummy.NumOfTriangles = (unsigned int)triangles.size();
+            file.write(reinterpret_cast<const char*>(&dummy), static_cast<std::streamsize>(sizeof(dummy)));
             file.write(reinterpret_cast<const char*>(triangles.data()), static_cast<std::streamsize>(triangles.size() * sizeof(Triangle)));
             file.close();
         }
@@ -365,7 +377,7 @@ namespace DUMP {
         auto index = 0;
         fs::path fullFileName;
        auto generateFName = [&index, &fileName, &fullFileName]() {
-            fullFileName= fileName.parent_path() / (fileName.stem().string() + fileNameSeparator + std::to_string(index)).replace_extension(fileExtension);
+            fullFileName= fileName.parent_path() / fs::path(fileName.stem().string() + fileNameSeparator + std::to_string(index)).replace_extension(fileExtension);
             
         };
         for (generateFName(); fs::exists(fullFileName); ++index, generateFName());
