@@ -7,7 +7,7 @@ endif()
 
 add_library(DumpSTL INTERFACE)
 target_include_directories(DumpSTL INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_features(DumpSTL INTERFACE cxx_std_20)
+target_compile_features(DumpSTL INTERFACE cxx_std_17)
 
 add_library(DumpSTL::DumpSTL ALIAS DumpSTL)
 
