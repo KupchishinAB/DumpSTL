@@ -158,7 +158,9 @@ namespace DUMP
             std::cout<<"WriteFile: <"<<filename<<">"<<std::endl;
             file.open(filename, std::ios::out | std::ios::binary);
             if (!file.is_open()) return;
-            unsigned int dummy[21]={0};
+            const unsigned int header_size_bytes = 80; // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
+            const unsigned int number_of_triangles_size_bytes = 4; // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
+            const char dummy[header_size_bytes + number_of_triangles_size_bytes]={0};
             dummy[20] = (unsigned int)triangles.size();
             file.write(reinterpret_cast<const char*>(dummy), static_cast<std::streamsize>(sizeof(dummy)));
             file.write(reinterpret_cast<const char*>(triangles.data()),static_cast<std::streamsize>(triangles.size()) * sizeof(Triangle));
