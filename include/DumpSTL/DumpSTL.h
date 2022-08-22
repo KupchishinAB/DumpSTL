@@ -365,7 +365,7 @@ namespace DUMP {
         auto index = 0;
         fs::path fullFileName;
        auto generateFName = [&index, &fileName, &fullFileName]() {
-            fullFileName= (fileName.parent_path()/(fileName.stem().string()+fileNameSeparator+std::to_string(index))).replace_extension(fileExtension);
+            fullFileName= fileName.parent_path() / (fileName.stem().string() + fileNameSeparator + std::to_string(index)).replace_extension(fileExtension);
             
         };
         for (generateFName(); fs::exists(fullFileName); ++index, generateFName());
