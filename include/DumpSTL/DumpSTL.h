@@ -128,10 +128,7 @@ namespace DUMP
         struct STLHeader
         {
             // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
-            enum
-            {
-                header_size_bytes = 80
-            };
+            static constexpr unsigned header_size_bytes = 80;
             char Header[header_size_bytes];
             uint32_t NumOfTriangles;
         };
@@ -376,7 +373,7 @@ namespace DUMP {
     void saveInc(fs::path fileName, Args... args) {
         auto index = 0;
         fs::path fullFileName;
-       auto generateFName = [&index, &fileName, &fullFileName]() {
+        auto generateFName = [&index, &fileName, &fullFileName]() {
             fullFileName= fileName.parent_path() / fs::path(fileName.stem().string() + fileNameSeparator + std::to_string(index)).replace_extension(fileExtension);
             
         };
