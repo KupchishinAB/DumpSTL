@@ -5,11 +5,14 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <algorithm>
+#include <vector>
 
 namespace DUMP
 {
+    namespace fs=std::filesystem;
     constexpr bool isEnable = true; // global turn off/turn on this tool (without clear code)
-    constexpr std::string_view folderSTL = "C:\\Repos\\STL\\"; // folder, where files will save
     constexpr float coneBaseSize = 1.f / 20.f;
     constexpr float oneSphereRadius = 0.1f;
     constexpr float ratioSphereRadius = 0.025f;
@@ -19,6 +22,8 @@ namespace DUMP
 
 namespace DUMP
 {
+    
+    
 #pragma pack(push, 4)
     template <typename T>
     struct Point3 {
@@ -116,10 +121,21 @@ namespace DUMP
         }
     };
 #pragma pack(pop)
+    static_assert(sizeof(Triangle)==50,"Triangle size should be 50, see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL"); 
 
     struct Model3D {
+
+        struct STLHeader
+        {
+            // see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL
+            static constexpr unsigned header_size_bytes = 80;
+            char Header[header_size_bytes];
+            uint32_t NumOfTriangles;
+        };
+        static_assert(sizeof(STLHeader)==84,"STLHeader size should be 84, see https://en.wikipedia.org/wiki/STL_(file_format)#Binary_STL"); 
+
         std::vector<Triangle> triangles;
-        static void exportTxt(std::string_view filename,
+        static void exportTxt(fs::path filename,
             const std::vector<Triangle>& triangles) {
             std::ofstream file;
             file.open(filename, std::ios::out);
@@ -139,37 +155,35 @@ namespace DUMP
             }
             file.close();
         }
-        void exportTxt(std::string_view str) const {
-            std::string filename(str);
-            filename += fileExtension;
-            exportTxt(std::string_view(filename), triangles);
+        void exportTxt(fs::path filename) const {
+            filename.replace_extension(fileExtension);
+            exportTxt(filename, triangles);
         }
-        void exportTxt(std::string&& filename) const {
-            filename += fileExtension;
-            exportTxt(std::string_view(filename), triangles);
+        void exportTxt(fs::path&& filename) const {
+            filename.replace_extension(fileExtension);
+            exportTxt(filename, triangles);
         }
-        static void exportBin(std::string_view filename,
+        static void exportBin(fs::path filename,
             const std::vector<Triangle>& triangles) {
             std::fstream file;
+            std::cout<<"WriteFile: <"<<filename<<">"<<std::endl;
             file.open(filename, std::ios::out | std::ios::binary);
             if (!file.is_open()) return;
-            unsigned int dummy[21];
-            dummy[20] = (unsigned int)triangles.size();
-            file.write((char*)dummy, 84);
-            file.write((char*)&(triangles[0]),
-                static_cast<std::streamsize>(triangles.size()) * 50);
+            STLHeader  dummy;
+            dummy.NumOfTriangles = (unsigned int)triangles.size();
+            file.write(reinterpret_cast<const char*>(&dummy), static_cast<std::streamsize>(sizeof(dummy)));
+            file.write(reinterpret_cast<const char*>(triangles.data()), static_cast<std::streamsize>(triangles.size() * sizeof(Triangle)));
             file.close();
         }
-        void exportBin(std::string_view str) const {
+        void exportBin(fs::path filename) const {
             if (triangles.empty()) return;
-            std::string filename(str);
-            filename += fileExtension;
-            exportBin(std::string_view(filename), triangles);
+            filename.replace_extension(fileExtension);
+            exportBin(filename, triangles);
         }
-        void exportBin(std::string&& str) const {
+        void exportBin(fs::path&& filename) const {
             if (triangles.empty()) return;
-            str += fileExtension;
-            exportBin(std::string_view(str), triangles);
+            filename.replace_extension(fileExtension);
+            exportBin(filename, triangles);
         }
 
         Model3D& addTriangle(const Point3f& pt1, const Point3f& pt2,
@@ -345,34 +359,25 @@ namespace DUMP // custom
 
 namespace DUMP {
     template <typename... Args>
-    void save(std::string_view fileName, Args... args) {
+    void save(fs::path fileName, Args... args) {
         if (!isEnable) return;
-        std::stringstream fullFileName;
-        fullFileName << DUMP::folderSTL << fileName;
-        convert(args...).exportBin(fullFileName.str());
+        convert(args...).exportBin(fileName);
     }
 
-    void save(std::string_view fileName, const Model3D& model) {
+    void save(fs::path fileName, const Model3D& model) {
         if (!isEnable) return;
-        std::stringstream fullFileName;
-        fullFileName << DUMP::folderSTL << fileName;
-        model.exportBin(fullFileName.str());
+        model.exportBin(fileName);
     }
 
     template <typename... Args>
-    void saveInc(std::string_view fileName, Args... args) {
+    void saveInc(fs::path fileName, Args... args) {
         auto index = 0;
-        std::stringstream fullFileName;
-        auto generateFName = [&]() {
-            fullFileName = std::stringstream();
-            fullFileName << DUMP::folderSTL << fileName << fileNameSeparator << index
-                << fileExtension;
+        fs::path fullFileName;
+        auto generateFName = [&index, &fileName, &fullFileName]() {
+            fullFileName= fileName.parent_path() / fs::path(fileName.stem().string() + fileNameSeparator + std::to_string(index)).replace_extension(fileExtension);
+            
         };
-        for (generateFName(); std::filesystem::exists(fullFileName.str());
-            ++index, generateFName())
-            ;
-        fullFileName = std::stringstream();
-        fullFileName << fileName << fileNameSeparator << index;
-        save(fullFileName.str(), args...);
+        for (generateFName(); fs::exists(fullFileName); ++index, generateFName());
+        save(fullFileName, args...);
     }
 }  // namespace DUMP
