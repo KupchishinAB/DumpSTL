@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿#ifndef DUMP_LIB
+#define DUMP_LIB
 
 #include <math.h>
 #include <filesystem>
@@ -8,17 +9,18 @@
 
 namespace DUMP
 {
-    constexpr bool isEnable = true; // global turn off/turn on this tool (without clear code)
-    constexpr std::string_view folderSTL = "C:\\Repos\\STL\\"; // folder, where files will save
-    constexpr float coneBaseSize = 1.f / 20.f;
-    constexpr float oneSphereRadius = 0.1f;
-    constexpr float ratioSphereRadius = 0.025f;
-    constexpr std::string_view fileExtension = ".stl";
-    constexpr char fileNameSeparator = '_';
+    static constexpr bool isEnable = true; // global turn off/turn on this tool (without clear code)
+    static constexpr std::string_view folderSTL = "";// "C:\\Repos\\STL\\"; // folder, where files will save
+    static constexpr float coneBaseSize = 1.f / 15.f;
+    static constexpr float oneSphereRadius = 0.0035f;
+    static constexpr float ratioSphereRadius = 0.001f;
+    static constexpr std::string_view fileExtension = ".stl";
+    static constexpr char fileNameSeparator = '_';
 }
 
 namespace DUMP
 {
+    
 #pragma pack(push, 4)
     template <typename T>
     struct Point3 {
@@ -204,9 +206,9 @@ namespace DUMP
             std::sort(bidders.begin(), bidders.end(),
                 [](const auto& a, const auto& b) { return a.first < b.first; });
             const auto basisX =
-                directionCone.cross_product(bidders[1].second).normalize() * baseSize;
+                directionCone.cross_product(bidders[1].second).normalize() * (baseSize * pt2.distance(pt1));
             const auto basisY =
-                basisX.cross_product(directionCone).normalize() * baseSize;
+                basisX.cross_product(directionCone).normalize() * (baseSize * pt2.distance(pt1));
 
             addQuad(pt1 + basisX, pt1 + basisY, pt1 - basisX, pt1 - basisY);
             addTriangle(pt1 + basisX, pt1 + basisY, pt2);
@@ -282,12 +284,16 @@ namespace DUMP
             }
             return *this;
         }
+        void merge(const DUMP::Model3D& model)
+        {
+            triangles.insert(triangles.end(), model.triangles.begin(), model.triangles.end());
+        }
     };
 }
 
 namespace DUMP // custom
 {
-    Model3D direction(const std::vector<Point3f>& points) {
+    static Model3D direction(const std::vector<Point3f>& points) {
         Model3D res;
         if (points.empty()) return res;
         for (auto point = points.begin(), pointNext = point + 1;
@@ -296,7 +302,12 @@ namespace DUMP // custom
         }
         return res;
     }
-    Model3D line(const std::vector<Point3f>& points) {
+    static Model3D direction(const Point3f& a, const Point3f& b ) {
+        Model3D res;
+        res.addCone(a, b);
+        return res;
+    }
+    static Model3D line(const std::vector<Point3f>& points) {
         Model3D res;
         if (points.empty()) return res;
         for (auto point = points.begin(), pointNext = point + 1;
@@ -305,7 +316,12 @@ namespace DUMP // custom
         }
         return res;
     }
-    Model3D sphere(const std::vector<Point3f>& points) {
+    static Model3D line(const Point3f& a, const Point3f& b) {
+        Model3D res;
+        res.addEdge(a,b);
+        return res;
+    }
+    static Model3D sphere(const std::vector<Point3f>& points) {
         if (points.empty()) return {};
 
         float radius = oneSphereRadius;
@@ -329,7 +345,7 @@ namespace DUMP // custom
         return res;
     }
 
-    Model3D convert(const std::vector<Point3f>& points) {
+    static Model3D convert(const std::vector<Point3f>& points) {
         if (points.empty()) return {};
         Model3D res;
         for (auto& pt : points) {
@@ -337,22 +353,22 @@ namespace DUMP // custom
         }
         return res;
     }
-    Model3D convert(const Triangle& triangle) { return Model3D{ {triangle} }; }
-    Model3D convert(const std::vector<Triangle>& triangles) {
+    static Model3D convert(const Triangle& triangle) { return Model3D{ {triangle} }; }
+    static Model3D convert(const std::vector<Triangle>& triangles) {
         return Model3D{ triangles };
     }
 }
 
 namespace DUMP {
     template <typename... Args>
-    void save(std::string_view fileName, Args... args) {
+    static void save(std::string_view fileName, Args... args) {
         if (!isEnable) return;
         std::stringstream fullFileName;
         fullFileName << DUMP::folderSTL << fileName;
         convert(args...).exportBin(fullFileName.str());
     }
 
-    void save(std::string_view fileName, const Model3D& model) {
+    static void save(std::string_view fileName, const Model3D& model) {
         if (!isEnable) return;
         std::stringstream fullFileName;
         fullFileName << DUMP::folderSTL << fileName;
@@ -360,7 +376,7 @@ namespace DUMP {
     }
 
     template <typename... Args>
-    void saveInc(std::string_view fileName, Args... args) {
+    static void saveInc(std::string_view fileName, Args... args) {
         auto index = 0;
         std::stringstream fullFileName;
         auto generateFName = [&]() {
@@ -376,3 +392,5 @@ namespace DUMP {
         save(fullFileName.str(), args...);
     }
 }  // namespace DUMP
+
+#endif // DUMP_LIB
